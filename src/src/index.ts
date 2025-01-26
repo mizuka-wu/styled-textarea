@@ -95,7 +95,6 @@ export class StyledTextarea extends HTMLElement {
         .styled-textarea-paragraph {
           margin: 0;
           padding: 2px 0;
-          line-height: 1.5;
         }
         
         .ProseMirror {
