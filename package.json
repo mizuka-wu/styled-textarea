@@ -1,20 +1,44 @@
 {
   "name": "styled-textarea",
   "version": "0.0.1",
+  "description": "A custom textarea component with style marks support",
   "type": "module",
+  "main": "dist/styled-textarea.umd.js",
+  "module": "dist/styled-textarea.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/styled-textarea.js",
+      "require": "./dist/styled-textarea.umd.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
-  "devDependencies": {
-    "typescript": "~5.6.2",
-    "vite": "^6.0.5"
-  },
+  "keywords": [
+    "textarea",
+    "web-components",
+    "custom-elements",
+    "text-editor",
+    "prosemirror"
+  ],
+  "author": "",
+  "license": "MIT",
   "dependencies": {
     "prosemirror-commands": "^1.6.2",
     "prosemirror-model": "^1.24.1",
     "prosemirror-state": "^1.4.3",
     "prosemirror-view": "^1.37.2"
+  },
+  "devDependencies": {
+    "typescript": "~5.6.2",
+    "vite": "^6.0.5",
+    "vite-plugin-dts": "^4.5.0"
   }
 }
