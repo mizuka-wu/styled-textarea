@@ -73,7 +73,7 @@ export class StyledTextarea extends HTMLElement {
           this._schema.node(
             "paragraph",
             null,
-            this._schema.text(this.value || "")
+            this.value ? this._schema.text(this.value) : null
           ),
         ]),
         // plugins: [
