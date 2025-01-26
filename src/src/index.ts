@@ -269,6 +269,11 @@ export class StyledTextarea extends HTMLElement {
   _setupStyles() {
     const style = document.createElement("style");
     style.textContent = `
+        :host {
+          display: block;
+          width: 100%;
+        }
+
         .styled-textarea-paragraph {
           margin: 0;
           padding: 0;
@@ -277,6 +282,11 @@ export class StyledTextarea extends HTMLElement {
         .ProseMirror {
           white-space: pre-wrap;
           outline: none;
+          width: 100%;
+          box-sizing: border-box;
+          max-width: inherit;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
         }
         
         .styled-textarea-link {
