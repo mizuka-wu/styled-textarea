@@ -37,6 +37,23 @@ export class StyledTextarea extends HTMLElement {
         text: { inline: true },
       },
       marks: {
+        customStyle: {
+          attrs: {
+            css: { default: "" },
+            className: { default: "" }
+          },
+          toDOM: (node) => ["span", {
+            style: node.attrs.css,
+            class: node.attrs.className
+          }, 0],
+          parseDOM: [{
+            tag: "span",
+            getAttrs: (dom) => ({
+              css: dom.getAttribute("style") || "",
+              className: dom.getAttribute("class") || ""
+            })
+          }]
+        },
         link: {
           attrs: {
             href: { default: "" },
@@ -388,6 +405,94 @@ export class StyledTextarea extends HTMLElement {
   }
   blur() {
     this.editor!.dom.blur();
+  }
+
+  /**
+   * 获取当前选区
+   * @returns 返回当前选区，包含 from 和 to 位置
+   */
+  get selection() {
+    if (!this.editor) return { from: 0, to: 0 };
+    const { from, to } = this.editor.state.selection;
+    return { from, to };
+  }
+
+  /**
+   * 添加文本标记
+   * @param from 起始位置
+   * @param marks 标记数组，每个标记包含 type 和 attrs
+   * @param length 可选，标记长度。如果不指定，则标记到文档末尾
+   */
+  addMarks(
+    from: number,
+    marks: Array<{
+      type: string;
+      attrs?: Record<string, any>;
+    }>,
+    length?: number
+  ) {
+    if (!this.editor) return;
+
+    const tr = this.editor.state.tr;
+    const doc = this.editor.state.doc;
+    const end = length !== undefined ? from + length : doc.content.size;
+
+    // 添加新的标记
+    marks.forEach(mark => {
+      const markType = this._schema.marks[mark.type];
+      if (markType) {
+        tr.addMark(from, end, markType.create(mark.attrs || {}));
+      }
+    });
+
+    this.editor.dispatch(tr);
+  }
+
+  /**
+   * 移除指定范围内的标记
+   * @param from 起始位置
+   * @param length 可选，要移除标记的长度。如果不指定，则移除到文档末尾
+   * @param types 可选，要移除的标记类型数组。如果不指定，则移除所有类型的标记
+   */
+  removeMarks(from: number, length?: number, types?: string[]) {
+    if (!this.editor) return;
+
+    const tr = this.editor.state.tr;
+    const doc = this.editor.state.doc;
+    const end = length !== undefined ? from + length : doc.content.size;
+
+    if (types && types.length > 0) {
+      // 移除指定类型的标记
+      types.forEach(type => {
+        const markType = this._schema.marks[type];
+        if (markType) {
+          tr.removeMark(from, end, markType);
+        }
+      });
+    } else {
+      // 移除所有标记
+      tr.removeMark(from, end);
+    }
+
+    this.editor.dispatch(tr);
+  }
+
+  /**
+   * 获取指定位置的所有标记
+   * @param pos 位置
+   * @returns 标记数组
+   */
+  getMarks(pos: number) {
+    if (!this.editor) return [];
+
+    const doc = this.editor.state.doc;
+    const resolvedPos = doc.resolve(pos);
+    const marks = resolvedPos.marks();
+
+    return marks.map(mark => ({
+      type: mark.type.name,
+      attrs: mark.attrs
+    }));
   }
 }
 
