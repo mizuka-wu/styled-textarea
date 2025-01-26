@@ -105,6 +105,7 @@ export class StyledTextarea extends HTMLElement {
           border-radius: 4px;
           font-family: Arial, sans-serif;
           font-size: 14px;
+          white-space: pre-wrap;
         }
         
         .styled-textarea-link {
