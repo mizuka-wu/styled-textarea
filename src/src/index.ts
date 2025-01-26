@@ -271,17 +271,12 @@ export class StyledTextarea extends HTMLElement {
     style.textContent = `
         .styled-textarea-paragraph {
           margin: 0;
-          padding: 2px 0;
+          padding: 0;
         }
         
         .ProseMirror {
-          min-height: 100px;
-          padding: 8px;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          font-family: Arial, sans-serif;
-          font-size: 14px;
           white-space: pre-wrap;
+          outline: none;
         }
         
         .styled-textarea-link {
