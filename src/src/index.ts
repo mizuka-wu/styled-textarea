@@ -333,7 +333,7 @@ export class StyledTextarea extends HTMLElement {
     const doc = this.editor.state.doc;
     let text = "";
     doc.forEach((node, offset) => {
-      if (text) text += "\n";  // 在段落之间添加换行符
+      if (text) text += "\n"; // 在段落之间添加换行符
       text += node.textContent;
     });
     return text;
@@ -343,12 +343,14 @@ export class StyledTextarea extends HTMLElement {
     if (!this.editor) return;
     // 按换行符分割文本
     const paragraphs = text.split(/\r?\n/);
-    const nodes = paragraphs.map(content => 
-      this._schema.node("paragraph", null, 
+    const nodes = paragraphs.map((content) =>
+      this._schema.node(
+        "paragraph",
+        null,
         content ? this._schema.text(content) : []
       )
     );
-    
+
     const tr = this.editor.state.tr.replaceWith(
       0,
       this.editor.state.doc.content.size,
@@ -361,10 +363,6 @@ export class StyledTextarea extends HTMLElement {
     const tr = this.editor!.state.tr;
     tr?.addMark(start, end, this._schema.marks.link.create({ href }));
     this.editor?.dispatch(tr);
-  }
-
-  getStyles() {
-    return this.editor?.state.doc.toJSON() || { content: [] };
   }
 
   select() {
