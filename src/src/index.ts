@@ -1,5 +1,5 @@
 import { Schema } from "prosemirror-model";
-import { EditorState } from "prosemirror-state";
+import { EditorState, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 // import { baseKeymap } from "prosemirror-commands";
 
@@ -170,6 +170,28 @@ export class StyledTextarea extends HTMLElement {
 
   getStyles() {
     return this.editor?.state.doc.toJSON() || { content: [] };
+  }
+
+  // 原生接口实现
+  select() {
+    const tr = this.editor!.state.tr.setSelection(
+      TextSelection.create(this.editor!.state.doc, 0, this.value.length)
+    );
+    this.editor!.dispatch(tr);
+  }
+
+  setSelectionRange(start: number, end: number) {
+    const tr = this.editor!.state.tr.setSelection(
+      TextSelection.create(this.editor!.state.doc, start, end)
+    );
+    this.editor!.dispatch(tr);
+  }
+
+  focus() {
+    this.editor!.focus();
+  }
+  blur() {
+    this.editor!.dom.blur();
   }
 }
 
