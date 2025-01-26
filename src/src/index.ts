@@ -77,6 +77,68 @@ export class StyledTextarea extends HTMLElement {
         ]),
         plugins: [
           new Plugin({
+            props: {
+              handleKeyDown: (view, event) => {
+                // 转发键盘事件
+                this.dispatchEvent(new KeyboardEvent('keydown', {
+                  key: event.key,
+                  code: event.code,
+                  location: event.location,
+                  ctrlKey: event.ctrlKey,
+                  shiftKey: event.shiftKey,
+                  altKey: event.altKey,
+                  metaKey: event.metaKey,
+                  repeat: event.repeat,
+                  isComposing: event.isComposing,
+                  charCode: event.charCode,
+                  keyCode: event.keyCode,
+                  bubbles: true,
+                  cancelable: true,
+                  composed: true,
+                }));
+                return false;
+              },
+              handleKeyPress: (view, event) => {
+                this.dispatchEvent(new KeyboardEvent('keypress', {
+                  key: event.key,
+                  code: event.code,
+                  location: event.location,
+                  ctrlKey: event.ctrlKey,
+                  shiftKey: event.shiftKey,
+                  altKey: event.altKey,
+                  metaKey: event.metaKey,
+                  repeat: event.repeat,
+                  isComposing: event.isComposing,
+                  charCode: event.charCode,
+                  keyCode: event.keyCode,
+                  bubbles: true,
+                  cancelable: true,
+                  composed: true,
+                }));
+                return false;
+              },
+              handleKeyUp: (view, event) => {
+                this.dispatchEvent(new KeyboardEvent('keyup', {
+                  key: event.key,
+                  code: event.code,
+                  location: event.location,
+                  ctrlKey: event.ctrlKey,
+                  shiftKey: event.shiftKey,
+                  altKey: event.altKey,
+                  metaKey: event.metaKey,
+                  repeat: event.repeat,
+                  isComposing: event.isComposing,
+                  charCode: event.charCode,
+                  keyCode: event.keyCode,
+                  bubbles: true,
+                  cancelable: true,
+                  composed: true,
+                }));
+                return false;
+              },
+            }
+          }),
+          new Plugin({
             view: () => ({
               update: (view: EditorView, prevState) => {
                 // 如果内容发生变化
