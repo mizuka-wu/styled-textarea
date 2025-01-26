@@ -1,5 +1,5 @@
 {
-  "name": "styled-textarea",
+  "name": "webcomponent-styled-textarea",
   "version": "0.0.1",
   "description": "A custom textarea component with style marks support",
   "type": "module",
