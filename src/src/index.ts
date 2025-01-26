@@ -319,17 +319,30 @@ export class StyledTextarea extends HTMLElement {
   }
 
   get value() {
-    return this.editor?.state.doc.textContent || "";
+    if (!this.editor) return "";
+    const doc = this.editor.state.doc;
+    let text = "";
+    doc.forEach((node, offset) => {
+      if (text) text += "\n";  // 在段落之间添加换行符
+      text += node.textContent;
+    });
+    return text;
   }
 
   set value(text) {
     if (!this.editor) return;
+    // 按换行符分割文本
+    const paragraphs = text.split(/\r?\n/);
+    const nodes = paragraphs.map(content => 
+      this._schema.node("paragraph", null, 
+        content ? this._schema.text(content) : []
+      )
+    );
+    
     const tr = this.editor.state.tr.replaceWith(
       0,
       this.editor.state.doc.content.size,
-      this._schema.node("doc", null, [
-        this._schema.node("paragraph", null, this._schema.text(text)),
-      ]).content
+      nodes
     );
     this.editor.dispatch(tr);
   }
