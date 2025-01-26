@@ -19,6 +19,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:demo": "vite build -c vite.config.demo.js",
     "preview": "vite preview"
   },
   "keywords": [
