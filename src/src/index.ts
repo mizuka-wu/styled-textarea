@@ -1,6 +1,13 @@
 import { Schema } from "prosemirror-model";
 import { EditorState, TextSelection, Plugin } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
+import {
+  baseKeymap,
+  chainCommands,
+  deleteSelection,
+  joinBackward,
+  selectNodeBackward,
+} from "prosemirror-commands";
 
 export class StyledTextarea extends HTMLElement {
   private _schema: Schema;
@@ -79,8 +86,7 @@ export class StyledTextarea extends HTMLElement {
           new Plugin({
             props: {
               handleKeyDown: (view, event) => {
-                // 转发键盘事件
-                this.dispatchEvent(new KeyboardEvent('keydown', {
+                const keyEvent = new KeyboardEvent("keydown", {
                   key: event.key,
                   code: event.code,
                   location: event.location,
@@ -95,11 +101,72 @@ export class StyledTextarea extends HTMLElement {
                   bubbles: true,
                   cancelable: true,
                   composed: true,
-                }));
-                return false;
+                });
+
+                Object.defineProperty(keyEvent, "target", {
+                  writable: false,
+                  value: this,
+                });
+
+                const prevented = !this.dispatchEvent(keyEvent);
+
+                if (prevented) {
+                  event.preventDefault();
+                  return true;
+                }
+
+                // 使用 baseKeymap 中的命令
+                if (baseKeymap[event.key]) {
+                  // 对于 Backspace 键，我们使用自定义的链式命令
+                  if (event.key === "Backspace") {
+                    const command = chainCommands(
+                      deleteSelection, // 首先尝试删除选中内容
+                      joinBackward, // 如果在段落开头，则与上一段落合并
+                      selectNodeBackward // 如果以上都失败，选中前一个节点
+                    );
+                    if (command(view.state, view.dispatch, view)) {
+                      return true;
+                    }
+                  }
+
+                  // 对于其他键，使用 baseKeymap 中的默认命令
+                  const command = baseKeymap[event.key];
+                  if (command(view.state, view.dispatch, view)) {
+                    return true;
+                  }
+                }
+
+                // 处理特殊按键
+                const { $from, $to } = view.state.selection;
+                const pos = $from.pos;
+
+                switch (event.key) {
+                  case "Enter":
+                    // 在当前位置插入新段落
+                    const tr = view.state.tr.split(pos);
+                    view.dispatch(tr);
+                    return true;
+
+                  case "ArrowUp":
+                    if ($from.pos === 0) {
+                      // 在文档开头时阻止向上移动
+                      return true;
+                    }
+                    return false;
+
+                  case "ArrowDown":
+                    if ($to.pos === view.state.doc.content.size) {
+                      // 在文档末尾时阻止向下移动
+                      return true;
+                    }
+                    return false;
+
+                  default:
+                    return false;
+                }
               },
               handleKeyPress: (view, event) => {
-                this.dispatchEvent(new KeyboardEvent('keypress', {
+                const keyEvent = new KeyboardEvent("keypress", {
                   key: event.key,
                   code: event.code,
                   location: event.location,
@@ -114,98 +181,85 @@ export class StyledTextarea extends HTMLElement {
                   bubbles: true,
                   cancelable: true,
                   composed: true,
-                }));
+                });
+
+                Object.defineProperty(keyEvent, "target", {
+                  writable: false,
+                  value: this,
+                });
+
+                const prevented = !this.dispatchEvent(keyEvent);
+                if (prevented) {
+                  event.preventDefault();
+                  return true;
+                }
+
                 return false;
               },
-              handleKeyUp: (view, event) => {
-                this.dispatchEvent(new KeyboardEvent('keyup', {
-                  key: event.key,
-                  code: event.code,
-                  location: event.location,
-                  ctrlKey: event.ctrlKey,
-                  shiftKey: event.shiftKey,
-                  altKey: event.altKey,
-                  metaKey: event.metaKey,
-                  repeat: event.repeat,
-                  isComposing: event.isComposing,
-                  charCode: event.charCode,
-                  keyCode: event.keyCode,
-                  bubbles: true,
-                  cancelable: true,
-                  composed: true,
-                }));
-                return false;
-              },
-            }
+            },
           }),
           new Plugin({
             view: () => ({
               update: (view: EditorView, prevState) => {
-                // 如果内容发生变化
                 if (!view.state.doc.eq(prevState.doc)) {
-                  // 创建InputEvent
-                  const inputEvent = new InputEvent('input', {
+                  const inputEvent = new InputEvent("input", {
                     bubbles: true,
                     cancelable: true,
                     composed: true,
-                    inputType: 'insertText',
+                    inputType: "insertText",
                     data: view.state.doc.textContent,
                     isComposing: false,
                     dataTransfer: null,
                     view: window,
                     detail: 0,
                   });
-                  
-                  // 添加target属性
-                  Object.defineProperty(inputEvent, 'target', {
+
+                  Object.defineProperty(inputEvent, "target", {
                     writable: false,
-                    value: this
+                    value: this,
                   });
 
                   this.dispatchEvent(inputEvent);
 
-                  // 当失去焦点时触发change事件
                   if (!view.hasFocus()) {
-                    const changeEvent = new Event('change', {
+                    const changeEvent = new Event("change", {
                       bubbles: true,
                       cancelable: false,
                       composed: true,
                     });
-                    
-                    // 添加target属性
-                    Object.defineProperty(changeEvent, 'target', {
+
+                    Object.defineProperty(changeEvent, "target", {
                       writable: false,
-                      value: this
+                      value: this,
                     });
 
                     this.dispatchEvent(changeEvent);
                   }
                 }
-              }
+              },
             }),
           }),
           new Plugin({
             props: {
               handleDOMEvents: {
                 blur: (view) => {
-                  const changeEvent = new Event('change', {
+                  const changeEvent = new Event("change", {
                     bubbles: true,
                     cancelable: false,
                     composed: true,
                   });
-                  
-                  // 添加target属性
-                  Object.defineProperty(changeEvent, 'target', {
+
+                  Object.defineProperty(changeEvent, "target", {
                     writable: false,
-                    value: this
+                    value: this,
                   });
 
                   this.dispatchEvent(changeEvent);
                   return false;
-                }
-              }
-            }
-          })
+                },
+              },
+            },
+          }),
         ],
       }),
       editable: () => !this.readOnly,
@@ -295,7 +349,6 @@ export class StyledTextarea extends HTMLElement {
     return this.editor?.state.doc.toJSON() || { content: [] };
   }
 
-  // 原生接口实现
   select() {
     const tr = this.editor!.state.tr.setSelection(
       TextSelection.create(this.editor!.state.doc, 0, this.value.length)
@@ -310,7 +363,6 @@ export class StyledTextarea extends HTMLElement {
     this.editor!.dispatch(tr);
   }
 
-  // 事件处理
   _handleUpdate(view: EditorView) {
     this.dispatchEvent(new Event("input", { bubbles: true }));
   }
