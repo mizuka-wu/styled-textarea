@@ -1,26 +1,20 @@
-import { Schema } from "prosemirror-model";
-import { EditorState, TextSelection, Plugin } from "prosemirror-state";
-import { EditorView } from "prosemirror-view";
-import {
-  baseKeymap,
-  chainCommands,
-  deleteSelection,
-  joinBackward,
-  selectNodeBackward,
-} from "prosemirror-commands";
+import { Schema } from 'prosemirror-model';
+import { EditorState, AllSelection, TextSelection, Plugin } from 'prosemirror-state';
+import { EditorView } from 'prosemirror-view';
+import { baseKeymap, chainCommands, deleteSelection, joinBackward, selectNodeBackward } from 'prosemirror-commands';
 
 export class StyledTextarea extends HTMLElement {
   private _schema: Schema;
   private editor: EditorView | null = null;
 
   static get observedAttributes() {
-    return ["value", "readonly"];
+    return ['value', 'readonly'];
   }
 
   constructor() {
     super();
     this._schema = this._createSchema();
-    this.attachShadow({ mode: "open" });
+    this.attachShadow({ mode: 'open' });
     this._initEditor();
     this._setupStyles();
   }
@@ -28,59 +22,62 @@ export class StyledTextarea extends HTMLElement {
   _createSchema() {
     return new Schema({
       nodes: {
-        doc: { content: "paragraph+" },
+        doc: { content: 'paragraph+' },
         paragraph: {
-          content: "text*",
-          toDOM: () => ["p", { class: "styled-textarea-paragraph" }, 0],
-          parseDOM: [{ tag: "p" }],
+          content: 'text*',
+          toDOM: () => ['p', { class: 'styled-textarea-paragraph' }, 0],
+          parseDOM: [{ tag: 'p' }],
         },
         text: { inline: true },
       },
       marks: {
         customStyle: {
           attrs: {
-            css: { default: "" },
-            className: { default: "" }
+            css: { default: '' },
+            className: { default: '' },
           },
-          toDOM: (node) => ["span", {
-            style: node.attrs.css,
-            class: node.attrs.className
-          }, 0],
-          parseDOM: [{
-            tag: "span",
-            getAttrs: (dom) => ({
-              css: dom.getAttribute("style") || "",
-              className: dom.getAttribute("class") || ""
-            })
-          }]
+          toDOM: node => [
+            'span',
+            {
+              style: node.attrs.css,
+              class: node.attrs.className,
+            },
+            0,
+          ],
+          parseDOM: [
+            {
+              tag: 'span',
+              getAttrs: dom => ({
+                css: dom.getAttribute('style') || '',
+                className: dom.getAttribute('class') || '',
+              }),
+            },
+          ],
         },
         link: {
           attrs: {
-            href: { default: "" },
+            href: { default: '' },
             editMode: { default: false },
           },
-          toDOM: (node) => {
-            const isEditable =
-              this.editor!.props.editable!(this.editor!.state) ?? true;
+          toDOM: node => {
+            const isEditable = this.editor!.props.editable!(this.editor!.state) ?? true;
             return [
-              isEditable ? "span" : "a",
+              isEditable ? 'span' : 'a',
               {
-                class: "styled-textarea-link",
+                class: 'styled-textarea-link',
                 href: node.attrs.href,
-                target: isEditable ? null : "_blank",
-                style: isEditable
-                  ? "cursor: text; pointer-events: none;"
-                  : "cursor: pointer;",
+                target: isEditable ? null : '_blank',
+                style: isEditable ? 'cursor: text; pointer-events: none;' : 'cursor: pointer;',
               },
               0,
             ];
           },
           parseDOM: [
             {
-              tag: "a.styled-textarea-link, span.styled-textarea-link",
-              getAttrs: (dom) => ({
-                href: dom.getAttribute("href") || "",
-                editMode: dom.tagName.toLowerCase() === "span",
+              tag: 'a.styled-textarea-link, span.styled-textarea-link',
+              getAttrs: dom => ({
+                href: dom.getAttribute('href') || '',
+                editMode: dom.tagName.toLowerCase() === 'span',
               }),
             },
           ],
@@ -92,18 +89,14 @@ export class StyledTextarea extends HTMLElement {
   _initEditor() {
     this.editor = new EditorView(this.shadowRoot, {
       state: EditorState.create({
-        doc: this._schema.node("doc", null, [
-          this._schema.node(
-            "paragraph",
-            null,
-            this.value ? this._schema.text(this.value) : []
-          ),
+        doc: this._schema.node('doc', null, [
+          this._schema.node('paragraph', null, this.value ? this._schema.text(this.value) : []),
         ]),
         plugins: [
           new Plugin({
             props: {
               handleKeyDown: (view, event) => {
-                const keyEvent = new KeyboardEvent("keydown", {
+                const keyEvent = new KeyboardEvent('keydown', {
                   key: event.key,
                   code: event.code,
                   location: event.location,
@@ -120,7 +113,7 @@ export class StyledTextarea extends HTMLElement {
                   composed: true,
                 });
 
-                Object.defineProperty(keyEvent, "target", {
+                Object.defineProperty(keyEvent, 'target', {
                   writable: false,
                   value: this,
                 });
@@ -135,7 +128,7 @@ export class StyledTextarea extends HTMLElement {
                 // 使用 baseKeymap 中的命令
                 if (baseKeymap[event.key]) {
                   // 对于 Backspace 键，我们使用自定义的链式命令
-                  if (event.key === "Backspace") {
+                  if (event.key === 'Backspace') {
                     const command = chainCommands(
                       deleteSelection, // 首先尝试删除选中内容
                       joinBackward, // 如果在段落开头，则与上一段落合并
@@ -158,20 +151,21 @@ export class StyledTextarea extends HTMLElement {
                 const pos = $from.pos;
 
                 switch (event.key) {
-                  case "Enter":
+                  case 'Enter':
                     // 在当前位置插入新段落
+                    // eslint-disable-next-line no-case-declarations
                     const tr = view.state.tr.split(pos);
                     view.dispatch(tr);
                     return true;
 
-                  case "ArrowUp":
+                  case 'ArrowUp':
                     if ($from.pos === 0) {
                       // 在文档开头时阻止向上移动
                       return true;
                     }
                     return false;
 
-                  case "ArrowDown":
+                  case 'ArrowDown':
                     if ($to.pos === view.state.doc.content.size) {
                       // 在文档末尾时阻止向下移动
                       return true;
@@ -183,7 +177,7 @@ export class StyledTextarea extends HTMLElement {
                 }
               },
               handleKeyPress: (view, event) => {
-                const keyEvent = new KeyboardEvent("keypress", {
+                const keyEvent = new KeyboardEvent('keypress', {
                   key: event.key,
                   code: event.code,
                   location: event.location,
@@ -200,7 +194,7 @@ export class StyledTextarea extends HTMLElement {
                   composed: true,
                 });
 
-                Object.defineProperty(keyEvent, "target", {
+                Object.defineProperty(keyEvent, 'target', {
                   writable: false,
                   value: this,
                 });
@@ -219,11 +213,11 @@ export class StyledTextarea extends HTMLElement {
             view: () => ({
               update: (view: EditorView, prevState) => {
                 if (!view.state.doc.eq(prevState.doc)) {
-                  const inputEvent = new InputEvent("input", {
+                  const inputEvent = new InputEvent('input', {
                     bubbles: true,
                     cancelable: true,
                     composed: true,
-                    inputType: "insertText",
+                    inputType: 'insertText',
                     data: view.state.doc.textContent,
                     isComposing: false,
                     dataTransfer: null,
@@ -231,7 +225,7 @@ export class StyledTextarea extends HTMLElement {
                     detail: 0,
                   });
 
-                  Object.defineProperty(inputEvent, "target", {
+                  Object.defineProperty(inputEvent, 'target', {
                     writable: false,
                     value: this,
                   });
@@ -239,13 +233,13 @@ export class StyledTextarea extends HTMLElement {
                   this.dispatchEvent(inputEvent);
 
                   if (!view.hasFocus()) {
-                    const changeEvent = new Event("change", {
+                    const changeEvent = new Event('change', {
                       bubbles: true,
                       cancelable: false,
                       composed: true,
                     });
 
-                    Object.defineProperty(changeEvent, "target", {
+                    Object.defineProperty(changeEvent, 'target', {
                       writable: false,
                       value: this,
                     });
@@ -259,14 +253,14 @@ export class StyledTextarea extends HTMLElement {
           new Plugin({
             props: {
               handleDOMEvents: {
-                blur: (view) => {
-                  const changeEvent = new Event("change", {
+                blur: view => {
+                  const changeEvent = new Event('change', {
                     bubbles: true,
                     cancelable: false,
                     composed: true,
                   });
 
-                  Object.defineProperty(changeEvent, "target", {
+                  Object.defineProperty(changeEvent, 'target', {
                     writable: false,
                     value: this,
                   });
@@ -284,7 +278,7 @@ export class StyledTextarea extends HTMLElement {
   }
 
   _setupStyles() {
-    const style = document.createElement("style");
+    const style = document.createElement('style');
     style.textContent = `
         :host {
           display: block;
@@ -326,13 +320,11 @@ export class StyledTextarea extends HTMLElement {
   }
 
   get readOnly() {
-    return this.hasAttribute("readonly");
+    return this.hasAttribute('readonly');
   }
 
   set readOnly(value) {
-    value
-      ? this.setAttribute("readonly", "")
-      : this.removeAttribute("readonly");
+    value ? this.setAttribute('readonly', '') : this.removeAttribute('readonly');
     this._updateEditable();
   }
 
@@ -342,15 +334,15 @@ export class StyledTextarea extends HTMLElement {
   }
 
   attributeChangedCallback(name: string) {
-    if (name === "readonly") this._updateEditable();
+    if (name === 'readonly') this._updateEditable();
   }
 
   get value() {
-    if (!this.editor) return "";
+    if (!this.editor) return '';
     const doc = this.editor.state.doc;
-    let text = "";
+    let text = '';
     doc.forEach((node, offset) => {
-      if (text) text += "\n"; // 在段落之间添加换行符
+      if (text) text += '\n'; // 在段落之间添加换行符
       text += node.textContent;
     });
     return text;
@@ -360,19 +352,11 @@ export class StyledTextarea extends HTMLElement {
     if (!this.editor) return;
     // 按换行符分割文本
     const paragraphs = text.split(/\r?\n/);
-    const nodes = paragraphs.map((content) =>
-      this._schema.node(
-        "paragraph",
-        null,
-        content ? this._schema.text(content) : []
-      )
+    const nodes = paragraphs.map(content =>
+      this._schema.node('paragraph', null, content ? this._schema.text(content) : [])
     );
 
-    const tr = this.editor.state.tr.replaceWith(
-      0,
-      this.editor.state.doc.content.size,
-      nodes
-    );
+    const tr = this.editor.state.tr.replaceWith(0, this.editor.state.doc.content.size, nodes);
     this.editor.dispatch(tr);
   }
 
@@ -384,22 +368,19 @@ export class StyledTextarea extends HTMLElement {
 
   select() {
     const doc = this.editor!.state.doc;
-    const from = 1; // 跳过 doc 开始位置
-    const to = doc.content.size - 1; // 跳过 doc 结束位置
-    const tr = this.editor!.state.tr.setSelection(TextSelection.create(doc, from, to));
+    const tr = this.editor!.state.tr.setSelection(new AllSelection(doc));
     this.editor!.dispatch(tr);
   }
 
-
-  setSelectionRange(start: number, end: number) {
+  selectRange(start: number = -1, end: number = -1) {
     if (start === -1) start = this.editor!.state.doc.content.size;
     if (end === -1) end = this.editor!.state.doc.content.size;
-    const tr = this.editor!.state.tr.setSelection(TextSelection.create(this.editor!.state.doc, start, end || start));
+    const tr = this.editor!.state.tr.setSelection(TextSelection.create(this.editor!.state.doc, start, end));
     this.editor!.dispatch(tr);
   }
 
   _handleUpdate(view: EditorView) {
-    this.dispatchEvent(new Event("input", { bubbles: true }));
+    this.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   focus() {
@@ -493,7 +474,7 @@ export class StyledTextarea extends HTMLElement {
 
     return marks.map(mark => ({
       type: mark.type.name,
-      attrs: mark.attrs
+      attrs: mark.attrs,
     }));
   }
 }
