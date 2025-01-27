@@ -383,9 +383,10 @@ export class StyledTextarea extends HTMLElement {
   }
 
   select() {
-    const tr = this.editor!.state.tr.setSelection(
-      TextSelection.create(this.editor!.state.doc, 0, this.value.length)
-    );
+    const doc = this.editor!.state.doc;
+    const from = 1; // 跳过 doc 开始位置
+    const to = doc.content.size - 1; // 跳过 doc 结束位置
+    const tr = this.editor!.state.tr.setSelection(TextSelection.create(doc, from, to));
     this.editor!.dispatch(tr);
   }
 
