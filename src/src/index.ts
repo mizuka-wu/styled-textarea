@@ -372,10 +372,18 @@ export class StyledTextarea extends HTMLElement {
     this.editor!.dispatch(tr);
   }
 
-  selectRange(start: number = -1, end: number = -1) {
-    if (start === -1) start = this.editor!.state.doc.content.size;
-    if (end === -1) end = this.editor!.state.doc.content.size;
-    const tr = this.editor!.state.tr.setSelection(TextSelection.create(this.editor!.state.doc, start, end));
+  setSelectionRange(start: number = -1, end: number = -1) {
+    const doc = this.editor!.state.doc;
+    if (start === -1) start = doc.content.size;
+    if (end === -1) end = doc.content.size;
+
+    // 确保选区范围在有效范围内
+    start = Math.max(0, Math.min(start, doc.content.size));
+    end = Math.max(0, Math.min(end, doc.content.size));
+
+    const startSel = TextSelection.near(doc.resolve(start));
+    const endSel = TextSelection.near(doc.resolve(end));
+    const tr = this.editor!.state.tr.setSelection(TextSelection.between(startSel.$anchor, endSel.$head));
     this.editor!.dispatch(tr);
   }
 
