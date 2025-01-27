@@ -389,10 +389,11 @@ export class StyledTextarea extends HTMLElement {
     this.editor!.dispatch(tr);
   }
 
+
   setSelectionRange(start: number, end: number) {
-    const tr = this.editor!.state.tr.setSelection(
-      TextSelection.create(this.editor!.state.doc, start, end)
-    );
+    if (start === -1) start = this.editor!.state.doc.content.size;
+    if (end === -1) end = this.editor!.state.doc.content.size;
+    const tr = this.editor!.state.tr.setSelection(TextSelection.create(this.editor!.state.doc, start, end || start));
     this.editor!.dispatch(tr);
   }
 
